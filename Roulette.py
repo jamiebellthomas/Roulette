@@ -1,9 +1,9 @@
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 import numpy as np
 import random
 
-class RouletteEnvFull(gym.Env):
+class Roulette(gym.Env):
     def __init__(self, initial_bankroll=100, max_steps=100):
         super().__init__()
 
@@ -22,11 +22,14 @@ class RouletteEnvFull(gym.Env):
         # Observation: current bankroll
         self.observation_space = spaces.Box(low=0, high=np.inf, shape=(1,), dtype=np.float32)
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
         self.bankroll = self.initial_bankroll
         self.current_step = 0
-        return np.array([self.bankroll], dtype=np.float32)
-
+        observation = np.array([self.bankroll], dtype=np.float32)
+        info = {}  # optional metadata
+        return observation, info
+    
     def step(self, action):
         self.current_step += 1
         action = np.clip(action, 0, 1)
@@ -48,10 +51,11 @@ class RouletteEnvFull(gym.Env):
 
         net_reward = reward - total_bet
         self.bankroll += net_reward
-        done = self.bankroll <= 0 or self.current_step >= self.max_steps
+        terminated = self.bankroll <= 0.0001         # Bankroll ran out
+        truncated = self.current_step >= self.max_steps  # Hit max steps
         info = {"outcome": outcome, "raw_reward": reward, "net_profit": net_reward}
 
-        return np.array([self.bankroll], dtype=np.float32), net_reward, done, info
+        return np.array([self.bankroll], dtype=np.float32), net_reward, terminated, truncated, info
 
     def render(self, mode="human"):
         print(f"Step {self.current_step} | Bankroll: {self.bankroll:.2f}")
@@ -133,7 +137,7 @@ class RouletteEnvFull(gym.Env):
     
 
 if __name__ == "__main__":
-    env = RouletteEnvFull()
+    env = Roulette()
     obs = env.reset()
     done = False
 
