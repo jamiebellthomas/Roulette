@@ -2,6 +2,7 @@ import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from Roulette import Roulette
+from CustomActorCritic import CustomActorCritic
 N_STEPS = 500_000
 # --- Training setup ---
 
@@ -10,7 +11,7 @@ def learn(n_steps):
     env = DummyVecEnv([lambda: Roulette()])
 
     # Train model
-    model = PPO("MlpPolicy", env, verbose=1, device='cpu')
+    model = PPO(CustomActorCritic, env, verbose=1, device='cpu')
     model.learn(total_timesteps=n_steps)
 
     # Save model

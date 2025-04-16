@@ -34,18 +34,14 @@ class Roulette(gym.Env):
     
     def step(self, action):
         self.current_step += 1
-        action = F.softmax(torch.tensor(action), dim=0).numpy()
 
-
-        # Normalize bets to total ≤ 1.0
-        total_bet_fraction = np.sum(action)
-        if total_bet_fraction > 1.0:
-            action = action / total_bet_fraction
-
+        # action is already in [0,1], sum ≤ 1 due to model constraints
         outcome = random.randint(0, 36)
+
         total_bet = self.bankroll * np.sum(action)
         reward = 0
 
+        # Calculate winnings
         for i, fraction in enumerate(action):
             amount = self.bankroll * fraction
             if outcome in self.bet_options[i]:
@@ -53,11 +49,19 @@ class Roulette(gym.Env):
 
         net_reward = reward - total_bet
         self.bankroll += net_reward
-        terminated = self.bankroll <= 0.0001         # Bankroll ran out
-        truncated = self.current_step >= self.max_steps  # Hit max steps
-        info = {"outcome": outcome, "raw_reward": reward, "net_profit": net_reward}
+
+        terminated = self.bankroll <= 0.0001
+        truncated = self.current_step >= self.max_steps
+        info = {
+            "outcome": outcome,
+            "raw_reward": reward,
+            "net_profit": net_reward,
+            "total_bet": total_bet,
+            "bankroll": self.bankroll
+        }
 
         return np.array([self.bankroll], dtype=np.float32), net_reward, terminated, truncated, info
+
 
     def render(self, mode="human"):
         print(f"Step {self.current_step} | Bankroll: {self.bankroll:.2f}")

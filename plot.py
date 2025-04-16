@@ -18,7 +18,6 @@ def run_episode(model, env=None):
 
     while not done:
         action, _ = model.predict(obs, deterministic=True)
-        assert np.isclose(action.sum(), 1.0, atol=1e-5), f"Bad action sum: {action.sum()}"
         obs, reward, terminated, truncated, info = env.step(action)
         done = terminated or truncated
 
@@ -37,6 +36,7 @@ def run_episode(model, env=None):
 
 def plot_average_bets(bet_history):
     mean_bets = bet_history.mean(axis=0)
+    print("Sum:", sum(mean_bets))
     plt.figure(figsize=(14, 4))
     plt.bar(range(len(mean_bets)), mean_bets)
     plt.title("Average Bet Proportions Per Bet Option")
