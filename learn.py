@@ -2,24 +2,19 @@ import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from Roulette import Roulette
-
+N_STEPS = 500_000
 # --- Training setup ---
 
+def learn(n_steps):
+    # Wrap environment
+    env = DummyVecEnv([lambda: Roulette()])
 
-# Wrap environment
-env = DummyVecEnv([lambda: Roulette()])
+    # Train model
+    model = PPO("MlpPolicy", env, verbose=1, device='cpu')
+    model.learn(total_timesteps=n_steps)
 
-# Train model
-model = PPO("MlpPolicy", env, verbose=1, device='cpu')
-model.learn(total_timesteps=100_000)
+    # Save model
+    model.save("ppo_roulette")
 
-# Test model
-test_env = Roulette()
-obs, info = test_env.reset()
-terminated = False
-truncated = False
-
-while not terminated and not truncated:
-    action, _ = model.predict(obs, deterministic=True)
-    obs, reward, terminated, truncated, info = test_env.step(action)
-    test_env.render()
+if __name__ == "__main__":
+    learn(n_steps=N_STEPS)

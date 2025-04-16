@@ -2,6 +2,8 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import random
+import torch
+import torch.nn.functional as F
 
 class Roulette(gym.Env):
     def __init__(self, initial_bankroll=100, max_steps=100):
@@ -32,7 +34,7 @@ class Roulette(gym.Env):
     
     def step(self, action):
         self.current_step += 1
-        action = np.clip(action, 0, 1)
+        action = F.softmax(torch.tensor(action), dim=0).numpy()
 
 
         # Normalize bets to total ≤ 1.0
