@@ -12,10 +12,11 @@ def run_episode(model, env=None, n_spins=1000):
     obs, _ = env.reset()
     bankroll_multiplier = 1
     rebuy_amount = env.initial_bankroll
+    total_invested = rebuy_amount  # initial stake
 
     bet_history = []
     outcome_history = []
-    bankroll_history = []
+    profit_history = []
 
     hit_counts = np.zeros(env.num_bets, dtype=np.int32)
 
@@ -24,33 +25,36 @@ def run_episode(model, env=None, n_spins=1000):
         obs, reward, terminated, truncated, info = env.step(action)
         outcome = info['outcome']
 
-        # Track which bet options the outcome would have hit
         for i, bet_set in enumerate(env.bet_options):
             if outcome in bet_set:
                 hit_counts[i] += 1
 
-        # If bust, rebuy with doubled bankroll
+        # If bust, rebuy with double bankroll
         if terminated:
             bankroll_multiplier *= 2
             rebuy_amount = env.initial_bankroll * bankroll_multiplier
+            total_invested += rebuy_amount
             env.bankroll = rebuy_amount
             env.last_outcome = -1
             env.last_net_reward = 0.0
             env.last_bet_fraction = 0.0
             obs = env._get_obs()
 
+        profit = obs[0] - total_invested
+
         bet_history.append(action.flatten())
         outcome_history.append(outcome)
-        bankroll_history.append(obs[0])
+        profit_history.append(profit)
 
     hit_frequencies = hit_counts / n_spins
 
     return {
         "bet_history": np.array(bet_history),
         "outcome_history": np.array(outcome_history),
-        "bankroll_history": np.array(bankroll_history),
+        "bankroll_history": np.array(profit_history),  # now relative profit
         "hit_frequencies": hit_frequencies
     }
+
 
 
 
@@ -239,8 +243,7 @@ def run_and_plot():
     hits = count_hits_from_outcomes(results["outcome_history"], env.bet_options)
     labels = generate_bet_labels()
 
-    plot_hit_vs_selected(hits, results["bet_history"], bet_labels=labels, top_n=20)
-
+    plot_hit_vs_selected(hits, results["bet_history"], bet_labels=labels, top_n=100)
 
 
 if __name__ == "__main__":
