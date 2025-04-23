@@ -3,7 +3,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from Roulette import Roulette
 from CustomActorCritic import CustomActorCritic
-N_STEPS = 500_000
+N_STEPS = 100_000
 # --- Training setup ---
 
 def learn(n_steps):

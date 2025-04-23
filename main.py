@@ -1,6 +1,6 @@
 from learn import learn
 from plot import run_and_plot
-N_STEPS = 500_000
+N_STEPS = 1_000_000
 
 def main():
     learn(n_steps=N_STEPS)
